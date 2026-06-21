@@ -7,6 +7,7 @@ import {
   isActionEvent,
   isObservationEvent,
 } from "#/types/v1/type-guards";
+import { useWorkspaceFiles } from "#/hooks/use-workspace-files";
 
 export type ArtifactSource = "written" | "edited" | "uploaded" | "image";
 
@@ -127,8 +128,11 @@ function shouldSkipPath(path: string): boolean {
   );
 }
 
-export function useArtifacts(): Artifact[] {
+export function useArtifacts(
+  conversationId: string | null | undefined,
+): Artifact[] {
   const events = useEventStore((state) => state.events);
+  const { data: wsFiles } = useWorkspaceFiles(conversationId);
 
   return React.useMemo(() => {
     const map = new Map<string, Artifact>();
@@ -214,8 +218,15 @@ export function useArtifacts(): Artifact[] {
       }
     }
 
+    for (const f of wsFiles ?? []) {
+      if (!map.has(f.path) && !shouldSkipPath(f.path)) {
+        const ts = new Date(f.modified_at * 1000).toISOString();
+        map.set(f.path, buildArtifact(f.path, "written", ts));
+      }
+    }
+
     return Array.from(map.values()).sort((a, b) =>
       b.timestamp.localeCompare(a.timestamp),
     );
-  }, [events]);
+  }, [events, wsFiles]);
 }

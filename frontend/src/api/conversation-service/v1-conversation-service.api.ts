@@ -463,6 +463,19 @@ class V1ConversationService {
     return response.data;
   }
 
+  static async listWorkspaceFiles(
+    conversationId: string,
+    path = "/workspace",
+  ): Promise<
+    Array<{ path: string; name: string; size: number; modified_at: number }>
+  > {
+    const params = new URLSearchParams({ path });
+    const { data } = await openHands.get(
+      `/api/v1/app-conversations/${conversationId}/workspace/files?${params.toString()}`,
+    );
+    return data;
+  }
+
   /**
    * Get all skills associated with a V1 conversation
    * @param conversationId The conversation ID

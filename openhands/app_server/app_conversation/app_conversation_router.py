@@ -1269,6 +1269,65 @@ async def download_conversation_file(
                 pass
 
 
+@router.get('/{conversation_id}/workspace/files')
+async def list_workspace_files(
+    conversation_id: UUID,
+    path: Annotated[str, Query()] = '/workspace',
+    app_conversation_service: AppConversationService = (
+        app_conversation_service_dependency
+    ),
+) -> list[dict]:
+    """List files in the shared workspace directory."""
+    import pathlib
+
+    conversation = await app_conversation_service.get_app_conversation(conversation_id)
+    if not conversation:
+        return []
+
+    _skip_dirs = {
+        '__pycache__',
+        '.git',
+        'node_modules',
+        '.ipynb_checkpoints',
+        '.mypy_cache',
+        '.pytest_cache',
+        '.tox',
+    }
+    _skip_suffixes = {'.pyc', '.pyo', '.pyd'}
+
+    root = pathlib.Path(path)
+    if not root.exists() or not root.is_dir():
+        return []
+
+    results = []
+    for p in root.rglob('*'):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(root)
+        parts = rel.parts
+        if any(part.startswith('.') for part in parts):
+            continue
+        if any(part in _skip_dirs for part in parts):
+            continue
+        if p.suffix in _skip_suffixes:
+            continue
+        try:
+            stat = p.stat()
+            results.append(
+                {
+                    'path': str(p),
+                    'name': p.name,
+                    'size': stat.st_size,
+                    'modified_at': stat.st_mtime,
+                }
+            )
+        except OSError:
+            continue
+
+    results.sort(key=lambda f: f['modified_at'], reverse=True)
+    return results
+
+
 async def _proxy_git_runtime_call(
     conversation_id: UUID,
     runtime_path: str,

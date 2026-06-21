@@ -37,8 +37,8 @@ function EmptyState() {
 
 export default function ArtifactsTab() {
   const { t } = useTranslation();
-  const artifacts = useArtifacts();
   const { conversationId } = useConversationId();
+  const artifacts = useArtifacts(conversationId);
 
   return (
     <main className="h-full flex flex-col overflow-hidden">

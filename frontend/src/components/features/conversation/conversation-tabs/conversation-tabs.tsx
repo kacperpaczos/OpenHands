@@ -31,7 +31,7 @@ export function ConversationTabs() {
     useConversationLocalStorageState(conversationId);
 
   const { hasTaskList } = useTaskList();
-  const artifacts = useArtifacts();
+  const artifacts = useArtifacts(conversationId);
 
   const {
     selectTab,
