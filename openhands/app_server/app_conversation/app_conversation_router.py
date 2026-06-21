@@ -1292,6 +1292,8 @@ async def list_workspace_files(
         '.mypy_cache',
         '.pytest_cache',
         '.tox',
+        'conversations',
+        'bash_events',
     }
     _skip_suffixes = {'.pyc', '.pyo', '.pyd'}
 
