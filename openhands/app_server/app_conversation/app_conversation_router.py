@@ -1284,6 +1284,8 @@ async def list_workspace_files(
     if not conversation:
         return []
 
+    cutoff = conversation.created_at.timestamp()
+
     _skip_dirs = {
         '__pycache__',
         '.git',
@@ -1315,6 +1317,8 @@ async def list_workspace_files(
             continue
         try:
             stat = p.stat()
+            if stat.st_mtime < cutoff:
+                continue
             results.append(
                 {
                     'path': str(p),
