@@ -7,6 +7,7 @@ import VSCodeIcon from "#/icons/vscode.svg?react";
 import ThreeDotsVerticalIcon from "#/icons/three-dots-vertical.svg?react";
 import LessonPlanIcon from "#/icons/lesson-plan.svg?react";
 import DoubleCheckIcon from "#/icons/double-check.svg?react";
+import FileExportIcon from "#/icons/u-file-export.svg?react";
 import { cn } from "#/utils/utils";
 import { useConversationLocalStorageState } from "#/utils/conversation-local-storage";
 import { ConversationTabNav } from "./conversation-tab-nav";
@@ -18,6 +19,7 @@ import { ConversationTabsContextMenu } from "./conversation-tabs-context-menu";
 import { useConversationId } from "#/hooks/use-conversation-id";
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
 import { useTaskList } from "#/hooks/use-task-list";
+import { useArtifacts } from "#/hooks/use-artifacts";
 
 export function ConversationTabs() {
   const { conversationId } = useConversationId();
@@ -29,6 +31,7 @@ export function ConversationTabs() {
     useConversationLocalStorageState(conversationId);
 
   const { hasTaskList } = useTaskList();
+  const artifacts = useArtifacts();
 
   const {
     selectTab,
@@ -111,6 +114,21 @@ export function ConversationTabs() {
       tooltipContent: t(I18nKey.COMMON$BROWSER),
       tooltipAriaLabel: t(I18nKey.COMMON$BROWSER),
       label: t(I18nKey.COMMON$BROWSER),
+    },
+    {
+      tabValue: "artifacts",
+      isActive: isTabActive("artifacts"),
+      icon: FileExportIcon,
+      onClick: () => selectTab("artifacts"),
+      tooltipContent:
+        artifacts.length > 0
+          ? `${t(I18nKey.COMMON$ARTIFACTS)} (${artifacts.length})`
+          : t(I18nKey.COMMON$ARTIFACTS),
+      tooltipAriaLabel: t(I18nKey.COMMON$ARTIFACTS),
+      label:
+        artifacts.length > 0
+          ? `${t(I18nKey.COMMON$ARTIFACTS)} (${artifacts.length})`
+          : t(I18nKey.COMMON$ARTIFACTS),
     },
   ];
 

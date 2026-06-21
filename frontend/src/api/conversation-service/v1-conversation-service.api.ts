@@ -450,6 +450,19 @@ class V1ConversationService {
     return response.data;
   }
 
+  static async downloadConversationFile(
+    conversationId: string,
+    filePath: string,
+  ): Promise<Blob> {
+    const params = new URLSearchParams();
+    params.append("file_path", filePath);
+    const response = await openHands.get(
+      `/api/v1/app-conversations/${conversationId}/file/download?${params.toString()}`,
+      { responseType: "blob" },
+    );
+    return response.data;
+  }
+
   /**
    * Get all skills associated with a V1 conversation
    * @param conversationId The conversation ID

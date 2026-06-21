@@ -16,6 +16,7 @@ const BrowserTab = lazy(() => import("#/routes/browser-tab"));
 const VSCodeTab = lazy(() => import("#/routes/vscode-tab"));
 const PlannerTab = lazy(() => import("#/routes/planner-tab"));
 const TaskListTab = lazy(() => import("#/routes/task-list-tab"));
+const ArtifactsTab = lazy(() => import("#/routes/artifacts-tab"));
 
 const TAB_CONFIG = {
   tasklist: {
@@ -41,6 +42,10 @@ const TAB_CONFIG = {
   planner: {
     component: PlannerTab,
     titleKey: I18nKey.COMMON$PLANNER,
+  },
+  artifacts: {
+    component: ArtifactsTab,
+    titleKey: I18nKey.COMMON$ARTIFACTS,
   },
 };
 

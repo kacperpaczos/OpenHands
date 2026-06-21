@@ -11,7 +11,8 @@ export type ConversationTab =
   | "vscode"
   | "terminal"
   | "planner"
-  | "tasklist";
+  | "tasklist"
+  | "artifacts";
 
 export type ConversationMode = "code" | "plan";
 

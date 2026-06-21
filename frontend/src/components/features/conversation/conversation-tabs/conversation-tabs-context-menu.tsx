@@ -14,6 +14,7 @@ import PillIcon from "#/icons/pill.svg?react";
 import PillFillIcon from "#/icons/pill-fill.svg?react";
 import LessonPlanIcon from "#/icons/lesson-plan.svg?react";
 import DoubleCheckIcon from "#/icons/double-check.svg?react";
+import FileExportIcon from "#/icons/u-file-export.svg?react";
 import { useTaskList } from "#/hooks/use-task-list";
 
 interface ConversationTabsContextMenuProps {
@@ -45,6 +46,11 @@ export function ConversationTabsContextMenu({
     { tab: "vscode", icon: VSCodeIcon, i18nKey: I18nKey.COMMON$CODE },
     { tab: "terminal", icon: TerminalIcon, i18nKey: I18nKey.COMMON$TERMINAL },
     { tab: "browser", icon: GlobeIcon, i18nKey: I18nKey.COMMON$BROWSER },
+    {
+      tab: "artifacts",
+      icon: FileExportIcon,
+      i18nKey: I18nKey.COMMON$ARTIFACTS,
+    },
   ];
 
   if (hasTaskList) {

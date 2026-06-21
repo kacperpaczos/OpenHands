@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import mimetypes
 import os
 import sys
 import tempfile
@@ -1168,6 +1169,104 @@ async def read_conversation_file(
                 pass
 
     return ''
+
+
+@router.get('/{conversation_id}/file/download')
+async def download_conversation_file(
+    conversation_id: UUID,
+    file_path: Annotated[
+        str,
+        Query(title='Path to the file to download within the sandbox workspace'),
+    ] = '/workspace/file',
+    app_conversation_service: AppConversationService = (
+        app_conversation_service_dependency
+    ),
+    sandbox_service: SandboxService = sandbox_service_dependency,
+    sandbox_spec_service: SandboxSpecService = sandbox_spec_service_dependency,
+):
+    """Download a binary file from a specific conversation's sandbox workspace.
+
+    Returns the raw file bytes with the appropriate Content-Type and
+    Content-Disposition headers so the browser triggers a Save-As dialog.
+
+    Args:
+        conversation_id: The UUID of the conversation
+        file_path: Absolute path to the file inside the sandbox workspace
+
+    Returns:
+        Binary file response or 404 if not found
+    """
+    conversation = await app_conversation_service.get_app_conversation(conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail='Conversation not found')
+
+    sandbox = await sandbox_service.get_sandbox(conversation.sandbox_id)
+    if not sandbox or sandbox.status != SandboxStatus.RUNNING:
+        raise HTTPException(status_code=404, detail='Sandbox not running')
+
+    sandbox_spec = await sandbox_spec_service.get_sandbox_spec(sandbox.sandbox_spec_id)
+    if not sandbox_spec:
+        raise HTTPException(status_code=404, detail='Sandbox spec not found')
+
+    if not sandbox.exposed_urls:
+        raise HTTPException(status_code=404, detail='No exposed URLs')
+
+    agent_server_url = None
+    for exposed_url in sandbox.exposed_urls:
+        if exposed_url.name == AGENT_SERVER:
+            agent_server_url = exposed_url.url
+            break
+
+    if not agent_server_url:
+        raise HTTPException(status_code=404, detail='Agent server URL not found')
+
+    agent_server_url = replace_localhost_hostname_for_docker(agent_server_url)
+
+    remote_workspace = AsyncRemoteWorkspace(
+        host=agent_server_url,
+        api_key=sandbox.session_api_key,
+        working_dir=sandbox_spec.working_dir,
+    )
+
+    temp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as temp_file:
+            temp_file_path = temp_file.name
+
+        result = await remote_workspace.file_download(
+            source_path=file_path,
+            destination_path=temp_file_path,
+        )
+
+        if not result.success:
+            raise HTTPException(status_code=404, detail='File not found in sandbox')
+
+        with open(temp_file_path, 'rb') as f:
+            content = f.read()
+
+        filename = os.path.basename(file_path)
+        mime_type, _ = mimetypes.guess_type(filename)
+        if not mime_type:
+            mime_type = 'application/octet-stream'
+
+        return StreamingResponse(
+            iter([content]),
+            media_type=mime_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{filename}"',
+                'Content-Length': str(len(content)),
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Failed to download file: {e}')
+    finally:
+        if temp_file_path:
+            try:
+                os.unlink(temp_file_path)
+            except Exception:
+                pass
 
 
 async def _proxy_git_runtime_call(
